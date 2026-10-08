@@ -1,0 +1,1 @@
+.person-avatar{width:72px;height:72px;overflow:hidden;position:relative}.person-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}.person-avatar span{position:relative;z-index:0}
