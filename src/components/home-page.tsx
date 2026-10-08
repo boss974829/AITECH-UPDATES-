@@ -9,6 +9,7 @@ import {
   type Person,
 } from "@/lib/edition-data";
 import type { BriefingPayload, LiveStory } from "@/lib/briefing";
+import { loadPublicBriefing } from "@/lib/briefing-client";
 import { bindCasualRail } from "@/components/casual-rail";
 
 type JobMode = "growing" | "exposure";
@@ -120,9 +121,10 @@ export function HomePage() {
     let cancel = false;
     (async () => {
       try {
+        const base = import.meta.env.BASE_URL;
         const [editionRes, briefingRes] = await Promise.all([
-          fetch("/api/edition", { cache: "no-store" }),
-          fetch("/api/briefing", { cache: "no-store" }),
+          fetch(`${base}api/edition`, { cache: "no-store" }),
+          fetch(`${base}api/briefing`, { cache: "no-store" }),
         ]);
         if (!editionRes.ok || !briefingRes.ok) throw new Error("api");
         const edition = (await editionRes.json()) as {
@@ -148,6 +150,19 @@ export function HomePage() {
         }
       } catch {
         if (cancel) return;
+        try {
+          const briefing = await loadPublicBriefing();
+          if (cancel) return;
+          setDateLabel(formatEditionDate(briefing.fetchedAt));
+          if (briefing.live) {
+            setLiveStories(briefing.stories);
+            setFeedStatus(`LIVE NEWS · UPDATED ${formatClock(briefing.fetchedAt)} · LAST 7 DAYS`);
+            setFeedError(false);
+            return;
+          }
+        } catch {
+          /* curated edition stays on screen */
+        }
         setFeedStatus("LIVE REFRESH UNAVAILABLE · SHOWING THE LAST CURATED EDITION");
         setFeedError(true);
       }
